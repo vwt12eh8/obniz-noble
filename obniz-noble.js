@@ -1562,18 +1562,26 @@ Gap.prototype.startScanning = function(allowDuplicates) {
   this._scanState = 'starting';
   this._scanFilterDuplicates = !allowDuplicates;
 
-  // Always set scan parameters before scanning
-  // https://www.bluetooth.org/docman/handlers/downloaddoc.ashx?doc_id=229737
-  // p106 - p107
-  this._hci.setScanEnabled(false, true);
-  this._hci.setScanParameters();
-
   if (isChip) {
     // work around for Next Thing Co. C.H.I.P, always allow duplicates, to get scan response
     this._scanFilterDuplicates = false;
   }
 
-  this._hci.setScanEnabled(true, this._scanFilterDuplicates);
+  // Always set scan parameters before scanning
+  // https://www.bluetooth.org/docman/handlers/downloaddoc.ashx?doc_id=229737
+  // p106 - p107
+  this._hci.setScanEnabled(false, true);
+  this._hci.once('leScanEnableSet', scanStopStatus => {
+    this._hci.setScanParameters();
+    this._hci.once('leScanParametersSet', setParamStatus => {
+      setTimeout(() => {
+        this._hci.setScanEnabled(true, this._scanFilterDuplicates);
+        this._hci.once('leScanEnableSet', scanStartStatus => {
+          debug('stan start ', scanStopStatus, setParamStatus, scanStartStatus);
+        });
+      }, 10);
+    });
+  });
 };
 
 Gap.prototype.stopScanning = function() {
