@@ -32,7 +32,7 @@
   "dependencies": {
     "@types/noble": "0.0.39",
     "debug": "~2.2.0",
-    "obniz": "~3.1.0"
+    "obniz": "~3.5.0"
   },
   "optionalDependencies": {},
   "devDependencies": {
