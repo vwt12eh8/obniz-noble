@@ -14,6 +14,10 @@ module.exports = {
   module: {
     rules: [
       {
+        test: /\.(css)$/,
+        use: 'raw-loader',
+      },
+      {
         test: /\.(yml|yaml)$/,
         use: [
           {
@@ -22,7 +26,7 @@ module.exports = {
           {
             // loader: require.resolve('yaml-loader')
             loader: require.resolve(
-                './node_modules/obniz/obniz/libs/webpackReplace/yaml-schema-loader'
+                './node_modules/obniz/dist/src/obniz/libs/webpackReplace/yaml-schema-loader'
             ),
           },
         ],
