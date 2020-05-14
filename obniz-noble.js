@@ -106,7 +106,9 @@ function idFilter(obnizId){
 module.exports = (obnizId, params)=>{
     let id = idFilter(obnizId);
     if(!nobles[id]){
-      nobles[id]  = new Noble(new bindings(obnizId, params));
+      let bind = new bindings(obnizId, params);
+      nobles[id]  = new Noble(bind);
+      nobles[id].obniz = bind._obniz;
     }
 
     return nobles[id] ;
@@ -974,6 +976,7 @@ var NobleBindings = function(obnizId, params) {
   this._signalings = {};
 
   this._hci = new Hci(obnizId, params);
+  this._obniz = this._hci.obniz;
   this._gap = new Gap(this._hci);
 };
 
@@ -2712,6 +2715,7 @@ var STATUS_MAPPER = __webpack_require__(/*! ./hci-status */ "./lib/obniz-hci-soc
 var Hci = function(obnizId, params) {
 
   let obniz = new Obniz(obnizId,params);
+  this.obniz = obniz;
   obniz.onconnect =()=>{
 
     if(!obniz.ble.hci){
@@ -3703,8 +3707,8 @@ Peripheral.prototype.updateRssi = function(callback) {
 
 Peripheral.prototype.pairing = function(options, callback) {
   if (callback) {
-    this.once('pairing', function(keys) {
-      callback(null, keys);
+    this.once('pairing', function(error, keys) {
+      callback(error, keys);
     });
   }
 
