@@ -95,24 +95,30 @@ var obnizNoble =
 /***/ (function(module, exports, __webpack_require__) {
 
 let Noble = __webpack_require__(/*! ./lib/noble */ "./lib/noble.js");
+let Obniz = __webpack_require__(/*! obniz */ "./node_modules/obniz/dist/src/obniz/index.js");
 let bindings = __webpack_require__(/*! ./lib/obniz-hci-socket/bindings */ "./lib/obniz-hci-socket/bindings.js");
 let nobles = {};
 
-function idFilter(obnizId){
+function idFilter(obnizId) {
   let str = "" + obnizId;
   return str.split("-").join("");
 }
 
-module.exports = (obnizId, params)=>{
-    let id = idFilter(obnizId);
-    if(!nobles[id]){
-      let bind = new bindings(obnizId, params);
-      nobles[id]  = new Noble(bind);
-      nobles[id].obniz = bind._obniz;
-    }
+const obnizNoble = (obnizId, params) => {
+  let id = idFilter(obnizId);
+  if (!nobles[id]) {
+    let bind = new bindings(obnizId, params);
+    nobles[id] = new Noble(bind);
+    nobles[id].obniz = bind._obniz;
+  }
 
-    return nobles[id] ;
-}
+  return nobles[id];
+};
+
+
+obnizNoble.Obniz = Obniz;
+
+module.exports = obnizNoble;
 
 
 /***/ }),
@@ -1243,7 +1249,13 @@ NobleBindings.prototype.onAclDataPkt = function(handle, cid, data) {
 NobleBindings.prototype.pairing = function(peripheralUuid, options) {
   var handle = this._handles[peripheralUuid];
   var aclStream = this._aclStreams[handle];
-  aclStream.encrypt(options);
+  if (aclStream) {
+    aclStream.encrypt(options);
+  }else{
+    console.warn('noble warning: unknown peripheral ' + peripheralUuid);
+    const error = new Error('unknown peripheral ' + peripheralUuid);
+    this.emit('pairing', peripheralUuid,  error);
+  }
 }
 
 NobleBindings.prototype.onPairing = function(handle, keys) {
@@ -2651,7 +2663,7 @@ var HCI_ACLDATA_PKT = 0x02;
 var HCI_EVENT_PKT = 0x04;
 
 var ACL_START_NO_FLUSH = 0x00;
-var ACL_CONT  = 0x01;
+var ACL_CONT = 0x01;
 var ACL_START = 0x02;
 
 var EVT_DISCONN_COMPLETE = 0x05;
@@ -2718,15 +2730,19 @@ var Hci = function(obnizId, params) {
   this.obniz = obniz;
   obniz.onconnect =()=>{
 
-    if(!obniz.ble.hci){
+    if (!obniz.ble.hci) {
       throw new Error("obniz-noble required obnizOS >= 3.0.0");
     }
 
-    obniz.ble.hci.onread = (data)=>{
-      let str = data.map( e => "0x"+e.toString(16)).join(", ")
-      this.onSocketData(Buffer.from(data));
+    obniz.ble.hci.onread = (data) => {
+      let str = data.map(e => "0x" + e.toString(16)).join(", ");
       // console.log(str);
-    }
+      try{
+        this.onSocketData(Buffer.from(data));
+      }catch(e){
+        console.warn("noble error on receive HCI data " + str);
+      }
+    };
 
     // this.setEventMask();
     // this.setLeEventMask();
@@ -2737,20 +2753,20 @@ var Hci = function(obnizId, params) {
 
 
     this.reset();
-  }
+  };
 
-  obniz.onclose = ()=>{
+  obniz.onclose = () => {
     this.emit('stateChange', 'poweredOff');
-  }
+  };
 
   this._socket = {
-    write: (data)=>{
+    write: (data) => {
       let arr = Array.from(data);
-      let str = "0x" + arr.map(e=>( parseInt(e).toString(16).padStart(2,"0"))).join(",0x");
       obniz.ble.hci.write(arr);
+      // let str = "0x" + arr.map(e => (parseInt(e).toString(16).padStart(2, "0"))).join(",0x");
       // console.log(str);
     }
-  }
+  };
   this._isDevUp = null;
   this._state = null;
   this._deviceId = null;
@@ -2930,8 +2946,8 @@ Hci.prototype.createLeConn = function(address, addressType) {
   cmd.writeUInt8(0x19, 3);
 
   // data
-  cmd.writeUInt16LE(0x0060, 4); // interval
-  cmd.writeUInt16LE(0x0030, 6); // window
+  cmd.writeUInt16LE(0x0010, 4); // interval
+  cmd.writeUInt16LE(0x0010, 6); // window
   cmd.writeUInt8(0x00, 8); // initiator filter
 
   cmd.writeUInt8(addressType === 'random' ? 0x01 : 0x00, 9); // peer address type
@@ -2939,12 +2955,12 @@ Hci.prototype.createLeConn = function(address, addressType) {
 
   cmd.writeUInt8(0x00, 16); // own address type
 
-  cmd.writeUInt16LE(0x0006, 17); // min interval
-  cmd.writeUInt16LE(0x000c, 19); // max interval
-  cmd.writeUInt16LE(0x0000, 21); // latency
-  cmd.writeUInt16LE(0x00c8, 23); // supervision timeout
-  cmd.writeUInt16LE(0x0004, 25); // min ce length
-  cmd.writeUInt16LE(0x0006, 27); // max ce length
+  cmd.writeUInt16LE(0x0009, 17); // min interval 9 * 1.25 msec => 7.5msec (close to android)
+  cmd.writeUInt16LE(0x0018, 19); // max interval 24 * 1.25 msec => 30msec (close to ios)
+  cmd.writeUInt16LE(0x0001, 21); // latency // cmd.writeUInt16LE(0x0000, 21);
+  cmd.writeUInt16LE(0x0190, 23); // supervision timeout 4sec // cmd.writeUInt16LE(0x00c8, 23);
+  cmd.writeUInt16LE(0x0000, 25); // min ce length
+  cmd.writeUInt16LE(0x0000, 27); // max ce length
 
   debug('create le conn - writing: ' + cmd.toString('hex'));
   this._socket.write(cmd);
@@ -23679,7 +23695,7 @@ module.exports = shouldUseNative() ? Object.assign : function (target, source) {
 
 module.exports = {
   "name": "obniz",
-  "version": "3.12.0-beta.1",
+  "version": "3.12.0-beta.2",
   "description": "obniz sdk for javascript",
   "main": "./dist/src/obniz/index.js",
   "types": "./dist/src/obniz/index.d.ts",
@@ -26712,6 +26728,10 @@ class ObnizConnection extends eventemitter3_1.default {
     static get WSCommand() {
         return wscommand_1.default;
     }
+    static isIpAddress(str) {
+        const regex = /^((25[0-5]|(2[0-4]|1[0-9]|[1-9]|)[0-9])(\.(?!$)|$)){4}$/;
+        return str.match(regex) !== null;
+    }
     /**
      * With this you wait until the connection to obniz Board succeeds.
      *
@@ -27102,7 +27122,7 @@ class ObnizConnection extends eventemitter3_1.default {
             this._close();
         }
         let url = server + "/obniz/" + this.id + "/ws/1";
-        if (this._isIpAddress(this.id)) {
+        if (this.constructor.isIpAddress(this.id)) {
             url = `ws://${this.id}/`;
         }
         const query = [];
@@ -27287,10 +27307,6 @@ class ObnizConnection extends eventemitter3_1.default {
                 this._startLoopInBackground();
             }
         }
-    }
-    _isIpAddress(str) {
-        const regex = /^((25[0-5]|(2[0-4]|1[0-9]|[1-9]|)[0-9])(\.(?!$)|$)){4}$/;
-        return str.match(regex) !== null;
     }
     print_debug(str) {
         if (this.debugprint) {
@@ -28478,16 +28494,12 @@ class ObnizUIs extends ObnizSystemMethods_1.default {
     constructor(id, options) {
         super(id, options);
     }
-    _close() {
-        super._close();
-        this.updateOnlineUI();
-    }
-    isValidObnizId(str) {
+    static isValidObnizId(str) {
         if (typeof str !== "string") {
             return false;
         }
         // IP => accept
-        if (this._isIpAddress(str)) {
+        if (this.isIpAddress(str)) {
             return true;
         }
         // Serial Number 'sn_***'
@@ -28505,9 +28517,13 @@ class ObnizUIs extends ObnizSystemMethods_1.default {
         }
         return id !== null;
     }
+    _close() {
+        super._close();
+        this.updateOnlineUI();
+    }
     wsconnect(desired_server) {
         this.showOffLine();
-        if (!this.isValidObnizId(this.id)) {
+        if (!this.constructor.isValidObnizId(this.id)) {
             if (this.isNode || !this.options.obnizid_dialog) {
                 this.error({ alert: "error", message: "invalid obniz id" });
             }
