@@ -581,12 +581,12 @@ Noble.prototype.disconnect = function(peripheralUuid) {
   this._bindings.disconnect(peripheralUuid);
 };
 
-Noble.prototype.onDisconnect = function(peripheralUuid) {
+Noble.prototype.onDisconnect = function(peripheralUuid, reason) {
   var peripheral = this._peripherals[peripheralUuid];
 
   if (peripheral) {
     peripheral.state = 'disconnected';
-    peripheral.emit('disconnect');
+    peripheral.emit('disconnect', reason);
   } else {
     this.emit('warning', 'unknown peripheral ' + peripheralUuid + ' disconnected!');
   }
@@ -1215,7 +1215,7 @@ NobleBindings.prototype.onDisconnComplete = function(handle, reason) {
     delete this._handles[uuid];
     delete this._handles[handle];
 
-    this.emit('disconnect', uuid); // TODO: handle reason?
+    this.emit('disconnect', uuid, reason);
   } else {
     console.warn('noble warning: unknown handle ' + handle + ' disconnected!');
   }
@@ -2740,7 +2740,7 @@ var Hci = function(obnizId, params) {
       try{
         this.onSocketData(Buffer.from(data));
       }catch(e){
-        console.warn("noble error on receive HCI data " + str);
+        console.warn("noble error on receive HCI data " + str, e);
       }
     };
 
