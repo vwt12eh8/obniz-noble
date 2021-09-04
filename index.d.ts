@@ -1,5 +1,6 @@
 import events = require("events");
 import {Peripheral, Descriptor, Characteristic, Service} from "noble";
+import Obniz from "obniz";
 
 // pass thorough
 export {Peripheral, Descriptor, Characteristic, Service, noble};
@@ -30,5 +31,5 @@ interface noble {
 
 }
 
-export default function obnizNoble(id:string, options?:any):noble;
+export default function obnizNoble(id:string, options?:any, obnizClass?: Obniz):noble;
 

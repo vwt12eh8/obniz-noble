@@ -20,14 +20,15 @@ npm uninstall noble
 
 ```javascript
 
+  // before
+  const noble = require("noble");
 
- //before 
- const noble = require("noble");
- 
- 
- //after
- const obnizNoble = require("obniz-noble");
- const noble = obnizNoble("OBNIZ_ID_HERE");
+
+  // after
+  const obnizNoble = require("obniz-noble");
+  const obniz = require("obniz");
+  const noble = obnizNoble("OBNIZ_ID_HERE");
+  // or  const noble = obnizNoble("OBNIZ_ID_HERE", {obnizOptions}, obniz);
 
 ```
 
@@ -43,8 +44,10 @@ npm install obniz-noble
 
 
 ```javascript
-var obnizNoble = require('obniz-noble')
-var noble = obnizNoble("OBNIZ_ID_HERE")  // or  var noble = obnizNoble("OBNIZ_ID_HERE", {obnizOptions})
+var obnizNoble = require('obniz-noble');
+var obniz = require("obniz");
+var noble = obnizNoble("OBNIZ_ID_HERE");
+// or  var noble = obnizNoble("OBNIZ_ID_HERE", {obnizOptions}, obniz);
 
 ```
 
@@ -54,11 +57,13 @@ var noble = obnizNoble("OBNIZ_ID_HERE")  // or  var noble = obnizNoble("OBNIZ_ID
 For browser 
 
 ```html
+<script src="https://unpkg.com/obniz/obniz.js"></script> 
 <script src="https://unpkg.com/obniz-noble/obniz-noble.js" crossorigin="anonymous"></script>
 
 <script>
-   var noble = obnizNoble("OBNIZ_ID_HERE")    // or  var noble = obnizNoble("OBNIZ_ID_HERE", {obnizOptions})
-   ...
+  var noble = obnizNoble(Obniz, "OBNIZ_ID_HERE"); 
+  // or  var noble = obnizNoble("OBNIZ_ID_HERE", {obnizOptions}, Obniz);
+  ...
 </script>
 ```
 

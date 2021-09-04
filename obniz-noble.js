@@ -95,7 +95,6 @@ var obnizNoble =
 /***/ (function(module, exports, __webpack_require__) {
 
 let Noble = __webpack_require__(/*! ./lib/noble */ "./lib/noble.js");
-let Obniz = __webpack_require__(/*! obniz */ "./node_modules/obniz/dist/src/obniz/index.js");
 let bindings = __webpack_require__(/*! ./lib/obniz-hci-socket/bindings */ "./lib/obniz-hci-socket/bindings.js");
 let nobles = {};
 
@@ -104,19 +103,19 @@ function idFilter(obnizId) {
   return str.split("-").join("");
 }
 
-const obnizNoble = (obnizId, params) => {
+const obnizNoble = (obnizId, params, obnizClass) => {
   let id = idFilter(obnizId);
+  let obniz = obnizClass;
+  if (obnizClass === undefined) obniz = __webpack_require__(/*! obniz */ "./node_modules/obniz/dist/src/obniz/index.js");
+  if (!(obniz instanceof Obniz)) throw new Error("Unable to initialize obniz.");
   if (!nobles[id]) {
-    let bind = new bindings(obnizId, params);
+    let bind = new bindings(obnizId, params, obniz);
     nobles[id] = new Noble(bind);
     nobles[id].obniz = bind._obniz;
   }
 
   return nobles[id];
 };
-
-
-obnizNoble.Obniz = Obniz;
 
 module.exports = obnizNoble;
 
@@ -966,7 +965,7 @@ var Hci = __webpack_require__(/*! ./hci */ "./lib/obniz-hci-socket/hci.js");
 var Signaling = __webpack_require__(/*! ./signaling */ "./lib/obniz-hci-socket/signaling.js");
 
 
-var NobleBindings = function(obnizId, params) {
+var NobleBindings = function(obnizId, params, obnizClass) {
   this._state = null;
 
   this._addresses = {};
@@ -981,7 +980,7 @@ var NobleBindings = function(obnizId, params) {
   this._aclStreams = {};
   this._signalings = {};
 
-  this._hci = new Hci(obnizId, params);
+  this._hci = new Hci(obnizId, params, obnizClass);
   this._obniz = this._hci.obniz;
   this._gap = new Gap(this._hci);
 };
@@ -2653,8 +2652,6 @@ module.exports = JSON.parse("[\"Success\",\"Unknown HCI Command\",\"Unknown Conn
 
 /* WEBPACK VAR INJECTION */(function(Buffer) {var debug = __webpack_require__(/*! debug */ "./node_modules/debug/browser.js")('hci');
 
-var Obniz = __webpack_require__(/*! obniz */ "./node_modules/obniz/dist/src/obniz/index.js");
-
 var events = __webpack_require__(/*! events */ "./node_modules/events/events.js");
 var util = __webpack_require__(/*! util */ "./node_modules/util/util.js");
 
@@ -2724,9 +2721,9 @@ var HCI_OE_USER_ENDED_CONNECTION = 0x13;
 
 var STATUS_MAPPER = __webpack_require__(/*! ./hci-status */ "./lib/obniz-hci-socket/hci-status.json");
 
-var Hci = function(obnizId, params) {
+var Hci = function(obnizId, params, obnizClass) {
 
-  let obniz = new Obniz(obnizId,params);
+  let obniz = new obnizClass(obnizId, params);
   this.obniz = obniz;
   obniz.onconnect =()=>{
 
@@ -20433,10 +20430,10 @@ utils.intFromLE = intFromLE;
 /*!********************************************!*\
   !*** ./node_modules/elliptic/package.json ***!
   \********************************************/
-/*! exports provided: _args, _development, _from, _id, _inBundle, _integrity, _location, _phantomChildren, _requested, _requiredBy, _resolved, _spec, _where, author, bugs, dependencies, description, devDependencies, files, homepage, keywords, license, main, name, repository, scripts, version, default */
+/*! exports provided: name, version, description, main, files, scripts, repository, keywords, author, license, bugs, homepage, devDependencies, dependencies, default */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"_args\":[[\"elliptic@6.5.2\",\"/Users/kido/Documents/extra/obniz/noble\"]],\"_development\":true,\"_from\":\"elliptic@6.5.2\",\"_id\":\"elliptic@6.5.2\",\"_inBundle\":false,\"_integrity\":\"sha512-f4x70okzZbIQl/NSRLkI/+tteV/9WqL98zx+SQ69KbXxmVrmjwsNUPn/gYJJ0sHvEak24cZgHIPegRePAtA/xw==\",\"_location\":\"/elliptic\",\"_phantomChildren\":{},\"_requested\":{\"type\":\"version\",\"registry\":true,\"raw\":\"elliptic@6.5.2\",\"name\":\"elliptic\",\"escapedName\":\"elliptic\",\"rawSpec\":\"6.5.2\",\"saveSpec\":null,\"fetchSpec\":\"6.5.2\"},\"_requiredBy\":[\"/browserify-sign\",\"/create-ecdh\"],\"_resolved\":\"https://registry.npmjs.org/elliptic/-/elliptic-6.5.2.tgz\",\"_spec\":\"6.5.2\",\"_where\":\"/Users/kido/Documents/extra/obniz/noble\",\"author\":{\"name\":\"Fedor Indutny\",\"email\":\"fedor@indutny.com\"},\"bugs\":{\"url\":\"https://github.com/indutny/elliptic/issues\"},\"dependencies\":{\"bn.js\":\"^4.4.0\",\"brorand\":\"^1.0.1\",\"hash.js\":\"^1.0.0\",\"hmac-drbg\":\"^1.0.0\",\"inherits\":\"^2.0.1\",\"minimalistic-assert\":\"^1.0.0\",\"minimalistic-crypto-utils\":\"^1.0.0\"},\"description\":\"EC cryptography\",\"devDependencies\":{\"brfs\":\"^1.4.3\",\"coveralls\":\"^3.0.8\",\"grunt\":\"^1.0.4\",\"grunt-browserify\":\"^5.0.0\",\"grunt-cli\":\"^1.2.0\",\"grunt-contrib-connect\":\"^1.0.0\",\"grunt-contrib-copy\":\"^1.0.0\",\"grunt-contrib-uglify\":\"^1.0.1\",\"grunt-mocha-istanbul\":\"^3.0.1\",\"grunt-saucelabs\":\"^9.0.1\",\"istanbul\":\"^0.4.2\",\"jscs\":\"^3.0.7\",\"jshint\":\"^2.10.3\",\"mocha\":\"^6.2.2\"},\"files\":[\"lib\"],\"homepage\":\"https://github.com/indutny/elliptic\",\"keywords\":[\"EC\",\"Elliptic\",\"curve\",\"Cryptography\"],\"license\":\"MIT\",\"main\":\"lib/elliptic.js\",\"name\":\"elliptic\",\"repository\":{\"type\":\"git\",\"url\":\"git+ssh://git@github.com/indutny/elliptic.git\"},\"scripts\":{\"jscs\":\"jscs benchmarks/*.js lib/*.js lib/**/*.js lib/**/**/*.js test/index.js\",\"jshint\":\"jscs benchmarks/*.js lib/*.js lib/**/*.js lib/**/**/*.js test/index.js\",\"lint\":\"npm run jscs && npm run jshint\",\"test\":\"npm run lint && npm run unit\",\"unit\":\"istanbul test _mocha --reporter=spec test/index.js\",\"version\":\"grunt dist && git add dist/\"},\"version\":\"6.5.2\"}");
+module.exports = JSON.parse("{\"name\":\"elliptic\",\"version\":\"6.5.2\",\"description\":\"EC cryptography\",\"main\":\"lib/elliptic.js\",\"files\":[\"lib\"],\"scripts\":{\"jscs\":\"jscs benchmarks/*.js lib/*.js lib/**/*.js lib/**/**/*.js test/index.js\",\"jshint\":\"jscs benchmarks/*.js lib/*.js lib/**/*.js lib/**/**/*.js test/index.js\",\"lint\":\"npm run jscs && npm run jshint\",\"unit\":\"istanbul test _mocha --reporter=spec test/index.js\",\"test\":\"npm run lint && npm run unit\",\"version\":\"grunt dist && git add dist/\"},\"repository\":{\"type\":\"git\",\"url\":\"git@github.com:indutny/elliptic\"},\"keywords\":[\"EC\",\"Elliptic\",\"curve\",\"Cryptography\"],\"author\":\"Fedor Indutny <fedor@indutny.com>\",\"license\":\"MIT\",\"bugs\":{\"url\":\"https://github.com/indutny/elliptic/issues\"},\"homepage\":\"https://github.com/indutny/elliptic\",\"devDependencies\":{\"brfs\":\"^1.4.3\",\"coveralls\":\"^3.0.8\",\"grunt\":\"^1.0.4\",\"grunt-browserify\":\"^5.0.0\",\"grunt-cli\":\"^1.2.0\",\"grunt-contrib-connect\":\"^1.0.0\",\"grunt-contrib-copy\":\"^1.0.0\",\"grunt-contrib-uglify\":\"^1.0.1\",\"grunt-mocha-istanbul\":\"^3.0.1\",\"grunt-saucelabs\":\"^9.0.1\",\"istanbul\":\"^0.4.2\",\"jscs\":\"^3.0.7\",\"jshint\":\"^2.10.3\",\"mocha\":\"^6.2.2\"},\"dependencies\":{\"bn.js\":\"^4.4.0\",\"brorand\":\"^1.0.1\",\"hash.js\":\"^1.0.0\",\"hmac-drbg\":\"^1.0.0\",\"inherits\":\"^2.0.1\",\"minimalistic-assert\":\"^1.0.0\",\"minimalistic-crypto-utils\":\"^1.0.0\"}}");
 
 /***/ }),
 
