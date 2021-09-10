@@ -61,7 +61,7 @@ For browser
 <script src="https://unpkg.com/obniz-noble/obniz-noble.js" crossorigin="anonymous"></script>
 
 <script>
-  var noble = obnizNoble(Obniz, "OBNIZ_ID_HERE"); 
+  var noble = obnizNoble("OBNIZ_ID_HERE"); 
   // or  var noble = obnizNoble("OBNIZ_ID_HERE", {obnizOptions}, Obniz);
   ...
 </script>
