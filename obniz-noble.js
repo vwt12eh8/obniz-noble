@@ -107,7 +107,6 @@ const obnizNoble = (obnizId, params, obnizClass) => {
   let id = idFilter(obnizId);
   let obniz = obnizClass;
   if (obnizClass === undefined) obniz = __webpack_require__(/*! obniz */ "./node_modules/obniz/dist/src/obniz/index.js");
-  if (!(obniz instanceof Obniz)) throw new Error("Unable to initialize obniz.");
   if (!nobles[id]) {
     let bind = new bindings(obnizId, params, obniz);
     nobles[id] = new Noble(bind);
