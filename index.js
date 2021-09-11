@@ -1,5 +1,4 @@
 let Noble = require('./lib/noble');
-let Obniz = require('obniz');
 let bindings = require('./lib/obniz-hci-socket/bindings');
 let nobles = {};
 
@@ -8,18 +7,17 @@ function idFilter(obnizId) {
   return str.split("-").join("");
 }
 
-const obnizNoble = (obnizId, params) => {
+const obnizNoble = (obnizId, params, obnizClass) => {
   let id = idFilter(obnizId);
+  let obniz = obnizClass;
+  if (obnizClass === undefined) obniz = require('obniz');
   if (!nobles[id]) {
-    let bind = new bindings(obnizId, params);
+    let bind = new bindings(obnizId, params, obniz);
     nobles[id] = new Noble(bind);
     nobles[id].obniz = bind._obniz;
   }
 
   return nobles[id];
 };
-
-
-obnizNoble.Obniz = Obniz;
 
 module.exports = obnizNoble;
